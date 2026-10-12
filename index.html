@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>CyberGuard AI</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav>
+    <b>🛡️ CyberGuard <span>AI</span></b>
+    <div>
+      <a href="#home">Home</a>
+      <a href="#report">Report</a>
+      <a href="#track">Track</a>
+      <a href="#about">About</a>
+      <a href="login.html">Admin</a>
+    </div>
+  </nav>
+
+  <section id="home" class="hero">
+    <div>
+      <small>🛡️ SMART CYBER COMPLAINT SYSTEM</small>
+      <h1>Report Cyber Crime<br><span>Quickly & Easily</span></h1>
+      <p>Report complaints, speak with the voice assistant, upload evidence and track your complaint.</p>
+      <a class="btn" href="#report">Report a Complaint</a>
+    </div>
+    <div class="hero-card">
+      🛡️
+      <h2>CyberGuard AI</h2>
+      <p>Report → AI Analysis → Track</p>
+      <p>✓ Smart Classification<br>✓ Voice Assistant<br>✓ Evidence Upload<br>✓ Complaint Tracking</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="heading">
+      <small>COMMON THREATS</small>
+      <h2>What can you report?</h2>
+    </div>
+    <div class="cards">
+      <article>💳<h3>Financial Fraud</h3><p>UPI, bank and payment fraud.</p></article>
+      <article>🎣<h3>Phishing</h3><p>Fake links, OTP scams and websites.</p></article>
+      <article>🔐<h3>Account Hacking</h3><p>Unauthorized access and stolen passwords.</p></article>
+      <article>📱<h3>Social Media Fraud</h3><p>Fake profiles and impersonation.</p></article>
+    </div>
+  </section>
+
+  <section id="report" class="gray">
+    <div class="heading">
+      <small>REPORT</small>
+      <h2>Register Your Complaint</h2>
+    </div>
+    <div class="form-card">
+      <label>Complaint</label>
+      <div class="voicebox">
+        <textarea id="complaint" maxlength="2000" placeholder="Example: Someone stole money from my UPI account..."></textarea>
+        <button id="voiceBtn">🎤</button>
+      </div>
+      <p id="voiceStatus" class="muted">🎙️ Click microphone to speak</p>
+      <p class="counter"><span id="charCount">0</span>/2000</p>
+      
+      <div class="buttons">
+        <button class="btn" id="startVoice">🎙️ Start Voice Assistant</button>
+        <button class="btn secondary hidden" id="stopVoice">⏹ Stop</button>
+        <button class="btn secondary" id="readVoice">🔊 Read Complaint</button>
+      </div>
+
+      <div class="uploads">
+        <div class="upload">
+          <h3>📎 Supporting Evidence</h3>
+          <p>PDF, JPG, PNG or MP4</p>
+          <input id="evidence" type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.mp4">
+          <div id="evidenceList"></div>
+        </div>
+        <div class="upload">
+          <h3>📸 Screenshots</h3>
+          <p>Images up to 1 MB each</p>
+          <input id="screenshots" type="file" multiple accept="image/*">
+          <div id="preview" class="preview"></div>
+        </div>
+      </div>
+      <p class="muted">Prototype limit: 5 evidence files and 3 screenshots.</p>
+      <button class="btn full" id="submit">🚨 Submit Complaint</button>
+      <div id="result"></div>
+    </div>
+  </section>
+
+  <section id="track">
+    <div class="heading">
+      <small>TRACK</small>
+      <h2>Track Your Complaint</h2>
+    </div>
+    <div class="track">
+      <div class="trackrow">
+        <input id="trackId" placeholder="CG-2026-123456">
+        <button class="btn" id="trackBtn">🔎 Track</button>
+      </div>
+      <div id="trackResult"></div>
+    </div>
+  </section>
+
+  <section id="about" class="gray">
+    <div class="heading">
+      <small>ABOUT</small>
+      <h2>CyberGuard AI</h2>
+      <p>College mini-project prototype for easier cyber complaint registration and tracking.</p>
+    </div>
+    <div class="about">🤖 Smart Analysis &nbsp; 🎙️ Voice Assistant &nbsp; 📎 Evidence &nbsp; 📊 Admin Dashboard</div>
+  </section>
+
+  <footer>
+    🛡️ CyberGuard AI<br>
+    <small>Smart Cyber Complaint Registration System | © 2026</small>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
