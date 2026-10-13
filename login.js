@@ -1,1 +1,41 @@
-const form=document.getElementById('loginForm');form.addEventListener('submit',e=>{e.preventDefault();const u=document.getElementById('username').value.trim(),p=document.getElementById('password').value,err=document.getElementById('loginError');if(u==='admin'&&p==='admin123'){sessionStorage.setItem('adminLoggedIn','true');location.replace('admin.html')}else{err.textContent='Invalid username or password.';document.getElementById('password').value=''}});
+const API_BASE_URL = 'https://laxmicyber-backend.onrender.com/api/complaints'; // Update this to your backend URL
+
+document.addEventListener('DOMContentLoaded', () => {
+  const loginForm = document.getElementById('loginForm') || document.querySelector('form');
+
+  if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const usernameInput = document.getElementById('username')?.value || document.querySelector('input[type="text"]')?.value;
+      const passwordInput = document.getElementById('password')?.value || document.querySelector('input[type="password"]')?.value;
+
+      if (!usernameInput || !passwordInput) {
+        alert('Please enter both username and password.');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: usernameInput, password: passwordInput })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          // Store token in localStorage
+          localStorage.setItem('adminToken', data.token);
+          // Redirect to Admin Dashboard
+          window.location.href = 'admin.html';
+        } else {
+          alert(data.message || 'Invalid username or password!');
+        }
+      } catch (err) {
+        console.error('Login error:', err);
+        alert('Server error while logging in. Please ensure the backend is running.');
+      }
+    });
+  }
+});

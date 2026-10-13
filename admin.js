@@ -1,148 +1,101 @@
-const API_URL = ' https://laxmicyber-backend.onrender.com/api/complaints';
-let complaintsList = [];
-let cc, sc;
+const API_URL = 'https://laxmicyber-backend.onrender.com/api/complaints'; // Update this to your backend URL
 
-const esc = x => String(x ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-
-async function fetchComplaints() {
-  try {
-    const res = await fetch(API_URL);
-    complaintsList = await res.json();
-    render();
-  } catch (err) {
-    console.error('Error fetching data:', err);
-  }
+// --- ROUTE PROTECTION CHECK ---
+// Execute immediately before rendering anything
+const token = localStorage.getItem('adminToken');
+if (!token) {
+  // If no token exists, immediately boot user to login page
+  window.location.href = 'login.html';
 }
 
-function render() {
-  let q = document.getElementById('search').value.toLowerCase();
-  let ca = document.getElementById('category').value;
-  let p = document.getElementById('priority').value;
-  let s = document.getElementById('status').value;
+document.addEventListener('DOMContentLoaded', () => {
+  fetchAdminComplaints();
+  setupLogout();
+});
 
-  let filtered = complaintsList.filter(c =>
-    (!q || c.id.toLowerCase().includes(q) || c.text.toLowerCase().includes(q)) &&
-    (ca === 'All' || c.category === ca) &&
-    (p === 'All' || c.priority === p) &&
-    (s === 'All' || c.status === s)
-  );
-
-  document.getElementById('total').textContent = complaintsList.length;
-  document.getElementById('high').textContent = complaintsList.filter(c => c.priority === 'High').length;
-  document.getElementById('review').textContent = complaintsList.filter(c => c.status === 'Under Review').length;
-  document.getElementById('resolved').textContent = complaintsList.filter(c => c.status === 'Resolved').length;
-
-  document.getElementById('complaintTable').innerHTML = filtered.length ? filtered.map(c => `
-    <tr>
-      <td>${esc(c.id)}</td>
-      <td>${esc(c.text)}</td>
-      <td>${esc(c.category)}</td>
-      <td><b class="p-${c.priority}">${c.priority}</b></td>
-      <td>
-        <select onchange="changeStatus('${c.id}', this.value)">
-          <option ${c.status === 'Registered' ? 'selected' : ''}>Registered</option>
-          <option ${c.status === 'Under Review' ? 'selected' : ''}>Under Review</option>
-          <option ${c.status === 'Resolved' ? 'selected' : ''}>Resolved</option>
-        </select>
-      </td>
-      <td>📎${c.evidence?.length || 0}<br>📸${c.screenshots?.length || 0}</td>
-      <td>${esc(c.date)}</td>
-      <td>
-        <button onclick="view('${c.id}')">👁️</button>
-        <button onclick="del('${c.id}')">🗑️</button>
-      </td>
-    </tr>
-  `).join('') : '<tr><td colspan="8">No complaints found.</td></tr>';
-
-  charts();
-}
-
-async function changeStatus(id, status) {
+// Fetch all complaints with authorization token
+async function fetchAdminComplaints() {
   try {
-    await fetch(`${API_URL}/${id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status })
+    const res = await fetch(API_URL, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
     });
-    fetchComplaints();
+
+    if (res.status === 401 || res.status === 403) {
+      // Token is invalid or expired
+      alert('Session expired. Please log in again.');
+      logoutAdmin();
+      return;
+    }
+
+    const complaints = await res.json();
+    renderComplaintsTable(complaints);
   } catch (err) {
-    alert('Failed to update status');
+    console.error('Error fetching complaints:', err);
   }
 }
 
-async function del(id) {
-  if (confirm('Delete this complaint?')) {
-    try {
-      await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-      fetchComplaints();
-    } catch (err) {
-      alert('Failed to delete complaint');
+// Function to delete a complaint
+async function deleteComplaint(id) {
+  if (!confirm(`Are you sure you want to delete complaint ${id}?`)) return;
+
+  try {
+    const res = await fetch(`${API_URL}/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (res.ok) {
+      alert('Complaint deleted successfully!');
+      fetchAdminComplaints(); // Refresh list
+    } else {
+      const errorData = await res.json();
+      alert(errorData.error || 'Failed to delete complaint.');
     }
+  } catch (err) {
+    console.error('Error deleting complaint:', err);
   }
 }
 
-async function clearAll() {
-  if (confirm('Clear all complaints permanently from database?')) {
-    try {
-      await fetch(API_URL, { method: 'DELETE' });
-      fetchComplaints();
-    } catch (err) {
-      alert('Failed to clear database');
+// Function to clear all complaints
+async function clearAllComplaints() {
+  if (!confirm('WARNING: Are you sure you want to delete ALL complaints? This cannot be undone.')) return;
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (res.ok) {
+      alert('All complaints cleared successfully!');
+      fetchAdminComplaints(); // Refresh list
+    } else {
+      const errorData = await res.json();
+      alert(errorData.error || 'Failed to clear complaints.');
     }
+  } catch (err) {
+    console.error('Error clearing complaints:', err);
   }
 }
 
-function resetFilters() {
-  ['search', 'category', 'priority', 'status'].forEach((x, i) => document.getElementById(x).value = i ? 'All' : '');
-  render();
+// Attach logout listener to button
+function setupLogout() {
+  const logoutBtn = document.getElementById('logoutBtn') || document.querySelector('.logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', logoutAdmin);
+  }
 }
 
-function view(id) {
-  const c = complaintsList.find(x => x.id === id);
-  if (!c) return;
-  let files = (c.screenshots || []).map(x => `<img class="modalimg" src="${x.data}">`).join('');
-  document.getElementById('modalBody').innerHTML = `
-    <h2>${esc(c.id)}</h2>
-    <p><b>Category:</b> ${esc(c.category)}<br><b>Priority:</b> ${esc(c.priority)}<br><b>Status:</b> ${esc(c.status)}<br><b>Date:</b> ${esc(c.date)}</p>
-    <hr>
-    <h3>Complaint</h3><p>${esc(c.text)}</p>
-    <h3>Evidence</h3><p>${(c.evidence || []).map(x => '📎 ' + esc(x.name)).join('<br>') || 'None'}</p>
-    <h3>Screenshots</h3><div>${files || 'None'}</div>
-  `;
-  document.getElementById('modal').classList.add('show');
+// Logout function
+function logoutAdmin() {
+  localStorage.removeItem('adminToken');
+  window.location.href = 'login.html';
 }
-
-function closeModal() {
-  document.getElementById('modal').classList.remove('show');
-}
-
-function logout() {
-  sessionStorage.removeItem('adminLoggedIn');
-  location.replace('login.html');
-}
-
-function charts() {
-  if (typeof Chart === 'undefined') return;
-  const cats = ['UPI / Financial Fraud', 'Phishing', 'Account Hacking', 'Social Media Fraud', 'Other'];
-  const sts = ['Registered', 'Under Review', 'Resolved'];
-
-  cc?.destroy();
-  sc?.destroy();
-
-  cc = new Chart(document.getElementById('categoryChart'), {
-    type: 'bar',
-    data: { labels: cats, datasets: [{ label: 'Complaints', data: cats.map(x => complaintsList.filter(c => c.category === x).length) }] },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-
-  sc = new Chart(document.getElementById('statusChart'), {
-    type: 'doughnut',
-    data: { labels: sts, datasets: [{ data: sts.map(x => complaintsList.filter(c => c.status === x).length) }] },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-}
-
-fetchComplaints();
-
-['search', 'category', 'priority', 'status'].forEach(id => document.getElementById(id).addEventListener(id === 'search' ? 'input' : 'change', render));
-window.addEventListener('click', e => { if (e.target === document.getElementById('modal')) closeModal(); });
