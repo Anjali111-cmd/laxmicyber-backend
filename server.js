@@ -8,33 +8,27 @@ const Complaint = require('./models/Complaint');
 
 const app = express();
 
-// ==========================================
-// MIDDLEWARE & CORS CONFIGURATION
-// ==========================================
+// Middleware
 app.use(express.json({ limit: '10mb' }));
 
-// Full CORS setup (Handles all origins, headers, and OPTIONS automatically)
+// Express CORS Setup
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Connect to MongoDB Atlas
+// MongoDB Connection
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected successfully'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-// Root test route
+// Test Route
 app.get('/', (req, res) => {
   res.send('CyberGuard AI Backend is Running');
 });
 
-// ==========================================
-// ADMIN AUTHENTICATION & MIDDLEWARE
-// ==========================================
-
-// Admin Login Endpoint
+// Admin Login Route
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
 
@@ -53,7 +47,7 @@ app.post('/api/admin/login', (req, res) => {
   }
 });
 
-// Middleware to verify admin JWT token
+// JWT Protection Middleware
 const verifyAdmin = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   if (!authHeader) return res.status(403).json({ error: 'Access denied. No token provided.' });
@@ -69,23 +63,17 @@ const verifyAdmin = (req, res, next) => {
   }
 };
 
-// ==========================================
-// COMPLAINT ROUTES
-// ==========================================
-
-// 1. Submit a complaint (Public)
+// Complaint Routes
 app.post('/api/complaints', async (req, res) => {
   try {
     const newComplaint = new Complaint(req.body);
     await newComplaint.save();
     res.status(201).json(newComplaint);
   } catch (err) {
-    console.error('Error saving complaint:', err.message);
     res.status(500).json({ error: 'Failed to save complaint' });
   }
 });
 
-// 2. Get all complaints
 app.get('/api/complaints', async (req, res) => {
   try {
     const complaints = await Complaint.find().sort({ createdAt: -1 });
@@ -95,7 +83,6 @@ app.get('/api/complaints', async (req, res) => {
   }
 });
 
-// 3. Get single complaint by ID
 app.get('/api/complaints/:id', async (req, res) => {
   try {
     const complaint = await Complaint.findOne({ id: req.params.id });
@@ -106,30 +93,25 @@ app.get('/api/complaints/:id', async (req, res) => {
   }
 });
 
-// 4. Delete a single complaint (Protected with verifyAdmin)
 app.delete('/api/complaints/:id', verifyAdmin, async (req, res) => {
   try {
     await Complaint.findOneAndDelete({ id: req.params.id });
     res.json({ success: true, message: 'Complaint deleted successfully' });
   } catch (err) {
-    console.error('Delete Error:', err.message);
     res.status(500).json({ error: 'Failed to delete complaint' });
   }
 });
 
-// 5. Clear all complaints (Protected with verifyAdmin)
 app.delete('/api/complaints', verifyAdmin, async (req, res) => {
   try {
     await Complaint.deleteMany({});
     res.json({ success: true, message: 'All complaints cleared' });
   } catch (err) {
-    console.error('Clear Error:', err.message);
     res.status(500).json({ error: 'Failed to clear database' });
   }
 });
 
-// ==========================================
-// SERVER INITIALIZATION
-// ==========================================
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+module.exports = app;

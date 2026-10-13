@@ -1,17 +1,19 @@
-const API_URL = 'https://laxmicyber-backend.onrender.com/api/complaints';
+const API_URL = 'https://laxmicyber-backend.vercel.app/api/complaints';
 
-// Immediate Route Protection Check
+// Route Guard Check
 const token = localStorage.getItem('adminToken');
 if (!token) {
   window.location.href = 'login.html';
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  fetchAdminComplaints();
-  setupLogout();
+  if (token) {
+    fetchAdminComplaints();
+    setupLogout();
+  }
 });
 
-// Fetch all complaints
+// Fetch all complaints with authorization
 async function fetchAdminComplaints() {
   try {
     const res = await fetch(API_URL, {
@@ -21,7 +23,7 @@ async function fetchAdminComplaints() {
     });
 
     if (res.status === 401 || res.status === 403) {
-      alert('Session expired or invalid login. Please log in again.');
+      alert('Session expired. Please log in again.');
       logoutAdmin();
       return;
     }
@@ -33,7 +35,7 @@ async function fetchAdminComplaints() {
   }
 }
 
-// Dynamically render complaints into the HTML table/container
+// Safely render complaints to HTML
 function renderComplaintsTable(complaints) {
   const container = document.getElementById('complaintsContainer') || 
                     document.getElementById('complaintsTable') || 
@@ -41,25 +43,24 @@ function renderComplaintsTable(complaints) {
                     document.querySelector('.complaints-list');
 
   if (!container) {
-    console.warn('No container element found in HTML to display complaints.');
+    console.warn('No table container element found in HTML to render complaints.');
     return;
   }
 
-  if (complaints.length === 0) {
+  if (!Array.isArray(complaints) || complaints.length === 0) {
     container.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 20px;">No complaints found.</td></tr>';
     return;
   }
 
-  // Populate rows
   container.innerHTML = complaints.map(c => `
     <tr>
-      <td><strong>${c.id || 'N/A'}</strong></td>
+      <td><strong>${c.id || c._id || 'N/A'}</strong></td>
       <td>${c.name || c.userName || 'Anonymous'}</td>
       <td>${c.category || c.type || 'N/A'}</td>
       <td>${c.description || ''}</td>
       <td>${c.createdAt ? new Date(c.createdAt).toLocaleDateString() : 'N/A'}</td>
       <td>
-        <button onclick="deleteComplaint('${c.id}')" style="background:#dc3545; color:white; border:none; padding: 5px 10px; borderRadius: 4px; cursor:pointer;">
+        <button onclick="deleteComplaint('${c.id || c._id}')" style="background:#dc3545; color:white; border:none; padding: 6px 12px; border-radius: 4px; cursor:pointer;">
           Delete
         </button>
       </td>
@@ -81,11 +82,11 @@ async function deleteComplaint(id) {
     });
 
     if (res.ok) {
-      alert('Complaint deleted!');
+      alert('Complaint deleted successfully!');
       fetchAdminComplaints();
     } else {
-      const errData = await res.json();
-      alert(errData.error || 'Failed to delete complaint.');
+      const errorData = await res.json();
+      alert(errorData.error || 'Failed to delete complaint.');
     }
   } catch (err) {
     console.error('Error deleting complaint:', err);
@@ -98,26 +99,26 @@ async function clearAllComplaints() {
 
   try {
     const res = await fetch(API_URL, {
+      method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
-      },
-      method: 'DELETE'
+      }
     });
 
     if (res.ok) {
       alert('All complaints cleared!');
       fetchAdminComplaints();
     } else {
-      const errData = await res.json();
-      alert(errData.error || 'Failed to clear complaints.');
+      const errorData = await res.json();
+      alert(errorData.error || 'Failed to clear complaints.');
     }
   } catch (err) {
     console.error('Error clearing complaints:', err);
   }
 }
 
-// Logout handler
+// Setup Logout Button Event
 function setupLogout() {
   const logoutBtn = document.getElementById('logoutBtn') || document.querySelector('.logout-btn');
   if (logoutBtn) {
