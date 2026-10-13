@@ -1,4 +1,4 @@
-const API_URL = ' https://laxmicyber-backend.onrender.com/api/complaints;';
+const API_URL = ' https://laxmicyber-backend.onrender.com/api/complaints';
 let complaintsList = [];
 let cc, sc;
 

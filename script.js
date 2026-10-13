@@ -1,4 +1,4 @@
-const API_URL = ' https://laxmicyber-backend.onrender.com/api/complaints;';
+const API_URL = ' https://laxmicyber-backend.onrender.com/api/complaints'; // Update this to your backend URL
 
 let evidence = [];
 let shots = [];
