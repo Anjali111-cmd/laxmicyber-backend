@@ -1,22 +1,37 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const jwt = require('jsonwebtoken'); // 1. Imported JWT at the top
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const Complaint = require('./models/Complaint');
 
 const app = express();
+
+// ==========================================
+// MIDDLEWARE CONFIGURATION
+// ==========================================
 app.use(express.json({ limit: '10mb' }));
-app.use(cors());
+
+// Full CORS setup to allow Vercel frontend requests without blocking
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Connect to MongoDB Atlas
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected successfully'))
   .catch(err => console.error('MongoDB connection error:', err));
 
+// Root test route
+app.get('/', (req, res) => {
+  res.send('CyberGuard AI Backend is Running');
+});
+
 // ==========================================
-// 2. ADMIN AUTHENTICATION & MIDDLEWARE
+// ADMIN AUTHENTICATION & MIDDLEWARE
 // ==========================================
 
 // Admin Login Endpoint
@@ -27,20 +42,26 @@ app.post('/api/admin/login', (req, res) => {
   const envPassword = process.env.ADMIN_PASSWORD || 'admin123';
 
   if (username === envUsername && password === envPassword) {
-    const token = jwt.sign({ role: 'admin' }, process.env.JWT_SECRET || 'secretkey', { expiresIn: '2h' });
+    const token = jwt.sign(
+      { role: 'admin' }, 
+      process.env.JWT_SECRET || 'secretkey', 
+      { expiresIn: '2h' }
+    );
     return res.json({ success: true, token });
   } else {
     return res.status(401).json({ success: false, message: 'Invalid username or password' });
   }
 });
 
-// Auth Middleware to protect sensitive admin actions
+// Middleware to verify admin JWT token
 const verifyAdmin = (req, res, next) => {
-  const token = req.headers['authorization'];
-  if (!token) return res.status(403).json({ error: 'Access denied. No token provided.' });
+  const authHeader = req.headers['authorization'];
+  if (!authHeader) return res.status(403).json({ error: 'Access denied. No token provided.' });
+
+  const token = authHeader.replace('Bearer ', '');
 
   try {
-    const decoded = jwt.verify(token.replace('Bearer ', ''), process.env.JWT_SECRET || 'secretkey');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secretkey');
     req.admin = decoded;
     next();
   } catch (err) {
@@ -52,7 +73,7 @@ const verifyAdmin = (req, res, next) => {
 // COMPLAINT ROUTES
 // ==========================================
 
-// Submit a complaint (Public)
+// 1. Submit a complaint (Public)
 app.post('/api/complaints', async (req, res) => {
   try {
     const newComplaint = new Complaint(req.body);
@@ -64,7 +85,7 @@ app.post('/api/complaints', async (req, res) => {
   }
 });
 
-// Get all complaints
+// 2. Get all complaints (Public / Track page)
 app.get('/api/complaints', async (req, res) => {
   try {
     const complaints = await Complaint.find().sort({ createdAt: -1 });
@@ -74,7 +95,7 @@ app.get('/api/complaints', async (req, res) => {
   }
 });
 
-// Get single complaint by ID
+// 3. Get single complaint by ID (Public / Track page)
 app.get('/api/complaints/:id', async (req, res) => {
   try {
     const complaint = await Complaint.findOne({ id: req.params.id });
@@ -85,27 +106,30 @@ app.get('/api/complaints/:id', async (req, res) => {
   }
 });
 
-// Delete a single complaint (Protected with verifyAdmin)
+// 4. Delete a single complaint (Protected with verifyAdmin)
 app.delete('/api/complaints/:id', verifyAdmin, async (req, res) => {
   try {
     await Complaint.findOneAndDelete({ id: req.params.id });
-    res.json({ success: true });
+    res.json({ success: true, message: 'Complaint deleted successfully' });
   } catch (err) {
     console.error('Delete Error:', err.message);
     res.status(500).json({ error: 'Failed to delete complaint' });
   }
 });
 
-// Clear all complaints (Protected with verifyAdmin)
+// 5. Clear all complaints (Protected with verifyAdmin)
 app.delete('/api/complaints', verifyAdmin, async (req, res) => {
   try {
     await Complaint.deleteMany({});
-    res.json({ success: true });
+    res.json({ success: true, message: 'All complaints cleared' });
   } catch (err) {
     console.error('Clear Error:', err.message);
     res.status(500).json({ error: 'Failed to clear database' });
   }
 });
 
+// ==========================================
+// SERVER INITIALIZATION
+// ==========================================
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
