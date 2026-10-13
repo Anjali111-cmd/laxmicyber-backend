@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://laxmicyber-backend.onrender.com/api/complaints'; // Update this to your backend URL
+const API_BASE_URL = 'https://laxmicyber-backend.onrender.com/api/admin';
 
 document.addEventListener('DOMContentLoaded', () => {
   const loginForm = document.getElementById('loginForm') || document.querySelector('form');
@@ -16,18 +16,23 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       try {
+        // Hits: https://laxmicyber-backend.onrender.com/api/admin/login
         const response = await fetch(`${API_BASE_URL}/login`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: usernameInput, password: passwordInput })
+          headers: { 
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify({ 
+            username: usernameInput, 
+            password: passwordInput 
+          })
         });
 
         const data = await response.json();
 
         if (response.ok && data.success) {
-          // Store token in localStorage
+          // Store token in localStorage and navigate to dashboard
           localStorage.setItem('adminToken', data.token);
-          // Redirect to Admin Dashboard
           window.location.href = 'admin.html';
         } else {
           alert(data.message || 'Invalid username or password!');
