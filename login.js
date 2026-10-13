@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      alert('Sending login request to backend...');
+      alert('Sending request to backend...');
 
       const response = await fetch(`${API_BASE_URL}/login`, {
         method: 'POST',
