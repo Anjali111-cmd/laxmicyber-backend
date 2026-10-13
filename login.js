@@ -16,23 +16,18 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       try {
-        // Hits: https://laxmicyber-backend.onrender.com/api/admin/login
         const response = await fetch(`${API_BASE_URL}/login`, {
           method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json' 
-          },
-          body: JSON.stringify({ 
-            username: usernameInput, 
-            password: passwordInput 
-          })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: usernameInput, password: passwordInput })
         });
 
         const data = await response.json();
 
         if (response.ok && data.success) {
-          // Store token in localStorage and navigate to dashboard
+          // Store token in localStorage
           localStorage.setItem('adminToken', data.token);
+          // Redirect to Admin Dashboard
           window.location.href = 'admin.html';
         } else {
           alert(data.message || 'Invalid username or password!');

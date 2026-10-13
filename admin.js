@@ -1,19 +1,19 @@
-const API_URL = 'https://laxmicyber-backend.onrender.com/api/complaints'; // Update this to your backend URL
+const API_URL = 'https://laxmicyber-backend.onrender.com/api/complaints';
 
-// --- ROUTE PROTECTION CHECK ---
-// Execute immediately before rendering anything
+// Immediate Route Guard: Check for token right away
 const token = localStorage.getItem('adminToken');
 if (!token) {
-  // If no token exists, immediately boot user to login page
   window.location.href = 'login.html';
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  fetchAdminComplaints();
-  setupLogout();
+  if (token) {
+    fetchAdminComplaints();
+    setupLogout();
+  }
 });
 
-// Fetch all complaints with authorization token
+// Fetch all complaints with authorization header
 async function fetchAdminComplaints() {
   try {
     const res = await fetch(API_URL, {
@@ -23,20 +23,27 @@ async function fetchAdminComplaints() {
     });
 
     if (res.status === 401 || res.status === 403) {
-      // Token is invalid or expired
       alert('Session expired. Please log in again.');
       logoutAdmin();
       return;
     }
 
     const complaints = await res.json();
-    renderComplaintsTable(complaints);
+    
+    // Ensure render function exists before executing
+    if (typeof renderComplaintsTable === 'function') {
+      renderComplaintsTable(complaints);
+    } else if (typeof displayComplaints === 'function') {
+      displayComplaints(complaints);
+    } else {
+      console.log('Complaints data loaded:', complaints);
+    }
   } catch (err) {
     console.error('Error fetching complaints:', err);
   }
 }
 
-// Function to delete a complaint
+// Delete a single complaint
 async function deleteComplaint(id) {
   if (!confirm(`Are you sure you want to delete complaint ${id}?`)) return;
 
@@ -51,7 +58,7 @@ async function deleteComplaint(id) {
 
     if (res.ok) {
       alert('Complaint deleted successfully!');
-      fetchAdminComplaints(); // Refresh list
+      fetchAdminComplaints();
     } else {
       const errorData = await res.json();
       alert(errorData.error || 'Failed to delete complaint.');
@@ -61,9 +68,9 @@ async function deleteComplaint(id) {
   }
 }
 
-// Function to clear all complaints
+// Clear all complaints
 async function clearAllComplaints() {
-  if (!confirm('WARNING: Are you sure you want to delete ALL complaints? This cannot be undone.')) return;
+  if (!confirm('WARNING: Are you sure you want to delete ALL complaints? This action cannot be undone.')) return;
 
   try {
     const res = await fetch(API_URL, {
@@ -76,7 +83,7 @@ async function clearAllComplaints() {
 
     if (res.ok) {
       alert('All complaints cleared successfully!');
-      fetchAdminComplaints(); // Refresh list
+      fetchAdminComplaints();
     } else {
       const errorData = await res.json();
       alert(errorData.error || 'Failed to clear complaints.');
@@ -86,7 +93,7 @@ async function clearAllComplaints() {
   }
 }
 
-// Attach logout listener to button
+// Attach logout event handler
 function setupLogout() {
   const logoutBtn = document.getElementById('logoutBtn') || document.querySelector('.logout-btn');
   if (logoutBtn) {
@@ -94,7 +101,7 @@ function setupLogout() {
   }
 }
 
-// Logout function
+// Logout helper
 function logoutAdmin() {
   localStorage.removeItem('adminToken');
   window.location.href = 'login.html';
