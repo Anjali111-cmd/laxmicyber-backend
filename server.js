@@ -13,15 +13,12 @@ const app = express();
 // ==========================================
 app.use(express.json({ limit: '10mb' }));
 
-// Full CORS setup to allow Vercel frontend requests without blocking
+// Full CORS setup (Handles all origins, headers, and OPTIONS automatically)
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
-
-// Express OPTIONS preflight handler
-app.options('*', cors());
 
 // Connect to MongoDB Atlas
 mongoose.connect(process.env.MONGO_URI)
