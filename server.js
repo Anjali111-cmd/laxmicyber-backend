@@ -9,16 +9,19 @@ const Complaint = require('./models/Complaint');
 const app = express();
 
 // ==========================================
-// MIDDLEWARE CONFIGURATION
+// MIDDLEWARE & CORS CONFIGURATION
 // ==========================================
 app.use(express.json({ limit: '10mb' }));
 
 // Full CORS setup to allow Vercel frontend requests without blocking
 app.use(cors({
   origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// Express OPTIONS preflight handler
+app.options('*', cors());
 
 // Connect to MongoDB Atlas
 mongoose.connect(process.env.MONGO_URI)
@@ -39,7 +42,7 @@ app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
 
   const envUsername = process.env.ADMIN_USERNAME || 'admin';
-  const envPassword = process.env.ADMIN_PASSWORD || 'admin123';
+  const envPassword = process.env.ADMIN_PASSWORD || 'anjali@1234';
 
   if (username === envUsername && password === envPassword) {
     const token = jwt.sign(
@@ -85,7 +88,7 @@ app.post('/api/complaints', async (req, res) => {
   }
 });
 
-// 2. Get all complaints (Public / Track page)
+// 2. Get all complaints
 app.get('/api/complaints', async (req, res) => {
   try {
     const complaints = await Complaint.find().sort({ createdAt: -1 });
@@ -95,7 +98,7 @@ app.get('/api/complaints', async (req, res) => {
   }
 });
 
-// 3. Get single complaint by ID (Public / Track page)
+// 3. Get single complaint by ID
 app.get('/api/complaints/:id', async (req, res) => {
   try {
     const complaint = await Complaint.findOne({ id: req.params.id });
