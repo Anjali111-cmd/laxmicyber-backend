@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
+const path = require('path');
 require('dotenv').config();
 
 const Complaint = require('./models/Complaint');
@@ -11,24 +12,26 @@ const app = express();
 // Middleware
 app.use(express.json({ limit: '10mb' }));
 
-// Full CORS setup allowing requests from any origin
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// Serve static HTML, JS, and CSS files from root directory
+app.use(express.static(path.join(__dirname)));
+
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected successfully'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-// Test Route
+// Route to root (serves index.html or fallback text)
 app.get('/', (req, res) => {
-  res.send('CyberGuard AI Backend is Running');
+  res.sendFile(path.join(__dirname, 'login.html'));
 });
 
-// Admin Login Endpoint
+// Admin Login Route
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
 
@@ -83,31 +86,12 @@ app.get('/api/complaints', async (req, res) => {
   }
 });
 
-app.get('/api/complaints/:id', async (req, res) => {
-  try {
-    const complaint = await Complaint.findOne({ id: req.params.id });
-    if (!complaint) return res.status(404).json({ error: 'Complaint not found' });
-    res.json(complaint);
-  } catch (err) {
-    res.status(500).json({ error: 'Error fetching complaint' });
-  }
-});
-
 app.delete('/api/complaints/:id', verifyAdmin, async (req, res) => {
   try {
     await Complaint.findOneAndDelete({ id: req.params.id });
     res.json({ success: true, message: 'Complaint deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete complaint' });
-  }
-});
-
-app.delete('/api/complaints', verifyAdmin, async (req, res) => {
-  try {
-    await Complaint.deleteMany({});
-    res.json({ success: true, message: 'All complaints cleared' });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to clear database' });
   }
 });
 
