@@ -25,16 +25,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await response.json();
 
         if (response.ok && data.success) {
-          // Store token
           localStorage.setItem('adminToken', data.token);
-          // Smooth redirection to admin page
-          window.location.assign('admin.html');
+          window.location.href = 'admin.html';
         } else {
           alert(data.message || 'Invalid username or password!');
         }
       } catch (err) {
         console.error('Login error:', err);
-        alert('Server error while logging in.');
+        alert('Could not connect to backend server.');
       }
     });
   }

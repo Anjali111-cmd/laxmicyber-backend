@@ -1,19 +1,16 @@
 const API_URL = 'https://laxmicyber-backend.vercel.app/api/complaints';
 
-// Route Guard Check
 const token = localStorage.getItem('adminToken');
-if (!token) {
-  window.location.href = 'login.html';
-}
 
 document.addEventListener('DOMContentLoaded', () => {
-  if (token) {
-    fetchAdminComplaints();
-    setupLogout();
+  if (!token) {
+    window.location.href = 'login.html';
+    return;
   }
+  fetchAdminComplaints();
+  setupLogout();
 });
 
-// Fetch all complaints with authorization
 async function fetchAdminComplaints() {
   try {
     const res = await fetch(API_URL, {
@@ -23,7 +20,7 @@ async function fetchAdminComplaints() {
     });
 
     if (res.status === 401 || res.status === 403) {
-      alert('Session expired. Please log in again.');
+      alert('Session expired or invalid token. Please log in again.');
       logoutAdmin();
       return;
     }
@@ -35,17 +32,13 @@ async function fetchAdminComplaints() {
   }
 }
 
-// Safely render complaints to HTML
 function renderComplaintsTable(complaints) {
   const container = document.getElementById('complaintsContainer') || 
                     document.getElementById('complaintsTable') || 
                     document.querySelector('tbody') || 
                     document.querySelector('.complaints-list');
 
-  if (!container) {
-    console.warn('No table container element found in HTML to render complaints.');
-    return;
-  }
+  if (!container) return;
 
   if (!Array.isArray(complaints) || complaints.length === 0) {
     container.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 20px;">No complaints found.</td></tr>';
@@ -68,57 +61,6 @@ function renderComplaintsTable(complaints) {
   `).join('');
 }
 
-// Delete single complaint
-async function deleteComplaint(id) {
-  if (!confirm(`Are you sure you want to delete complaint ${id}?`)) return;
-
-  try {
-    const res = await fetch(`${API_URL}/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (res.ok) {
-      alert('Complaint deleted successfully!');
-      fetchAdminComplaints();
-    } else {
-      const errorData = await res.json();
-      alert(errorData.error || 'Failed to delete complaint.');
-    }
-  } catch (err) {
-    console.error('Error deleting complaint:', err);
-  }
-}
-
-// Clear all complaints
-async function clearAllComplaints() {
-  if (!confirm('WARNING: Are you sure you want to delete ALL complaints?')) return;
-
-  try {
-    const res = await fetch(API_URL, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (res.ok) {
-      alert('All complaints cleared!');
-      fetchAdminComplaints();
-    } else {
-      const errorData = await res.json();
-      alert(errorData.error || 'Failed to clear complaints.');
-    }
-  } catch (err) {
-    console.error('Error clearing complaints:', err);
-  }
-}
-
-// Setup Logout Button Event
 function setupLogout() {
   const logoutBtn = document.getElementById('logoutBtn') || document.querySelector('.logout-btn');
   if (logoutBtn) {
