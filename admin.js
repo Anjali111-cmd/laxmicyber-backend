@@ -61,6 +61,30 @@ function renderComplaintsTable(complaints) {
   `).join('');
 }
 
+async function deleteComplaint(id) {
+  if (!confirm(`Are you sure you want to delete complaint ${id}?`)) return;
+
+  try {
+    const res = await fetch(`${API_URL}/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (res.ok) {
+      alert('Complaint deleted successfully!');
+      fetchAdminComplaints();
+    } else {
+      const errorData = await res.json();
+      alert(errorData.error || 'Failed to delete complaint.');
+    }
+  } catch (err) {
+    console.error('Error deleting complaint:', err);
+  }
+}
+
 function setupLogout() {
   const logoutBtn = document.getElementById('logoutBtn') || document.querySelector('.logout-btn');
   if (logoutBtn) {

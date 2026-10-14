@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (response.ok && data.success) {
           localStorage.setItem('adminToken', data.token);
-          window.location.href = 'admin.html';
+          window.location.assign('admin.html');
         } else {
           alert(data.message || 'Invalid username or password!');
         }

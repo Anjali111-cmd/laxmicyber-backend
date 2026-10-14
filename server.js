@@ -11,7 +11,7 @@ const app = express();
 // Middleware
 app.use(express.json({ limit: '10mb' }));
 
-// Express CORS Setup
+// Full CORS setup allowing requests from any origin
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -28,7 +28,7 @@ app.get('/', (req, res) => {
   res.send('CyberGuard AI Backend is Running');
 });
 
-// Admin Login Route
+// Admin Login Endpoint
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
 
