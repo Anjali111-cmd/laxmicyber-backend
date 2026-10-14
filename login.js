@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://laxmicyber-backend.vercel.app/api/admin';
+const API_BASE_URL = '/api/admin';
 
 document.addEventListener('DOMContentLoaded', () => {
   const loginForm = document.getElementById('loginForm') || document.querySelector('form');
@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (response.ok && data.success) {
           localStorage.setItem('adminToken', data.token);
-          window.location.assign('admin.html');
+          window.location.href = 'admin.html';
         } else {
           alert(data.message || 'Invalid username or password!');
         }
