@@ -18,7 +18,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Serve static HTML, JS, and CSS files from root directory
+// Serve static files (HTML, CSS, JS) from project root
 app.use(express.static(path.join(__dirname)));
 
 // MongoDB Connection
@@ -26,7 +26,7 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected successfully'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-// Route to root (serves index.html or fallback text)
+// Fallback to login.html on root access
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'login.html'));
 });
