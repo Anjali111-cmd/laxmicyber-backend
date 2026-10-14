@@ -1,5 +1,4 @@
-const API_URL = 'https://laxmicyber-backend.vercel.app/api/complaints';
-
+const API_URL = '/api/complaints';
 const token = localStorage.getItem('adminToken');
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -20,7 +19,7 @@ async function fetchAdminComplaints() {
     });
 
     if (res.status === 401 || res.status === 403) {
-      alert('Session expired or invalid token. Please log in again.');
+      alert('Session expired. Please log in again.');
       logoutAdmin();
       return;
     }
@@ -33,11 +32,7 @@ async function fetchAdminComplaints() {
 }
 
 function renderComplaintsTable(complaints) {
-  const container = document.getElementById('complaintsContainer') || 
-                    document.getElementById('complaintsTable') || 
-                    document.querySelector('tbody') || 
-                    document.querySelector('.complaints-list');
-
+  const container = document.getElementById('complaintsContainer');
   if (!container) return;
 
   if (!Array.isArray(complaints) || complaints.length === 0) {
@@ -48,8 +43,8 @@ function renderComplaintsTable(complaints) {
   container.innerHTML = complaints.map(c => `
     <tr>
       <td><strong>${c.id || c._id || 'N/A'}</strong></td>
-      <td>${c.name || c.userName || 'Anonymous'}</td>
-      <td>${c.category || c.type || 'N/A'}</td>
+      <td>${c.userName || 'Anonymous'}</td>
+      <td>${c.type || 'N/A'}</td>
       <td>${c.description || ''}</td>
       <td>${c.createdAt ? new Date(c.createdAt).toLocaleDateString() : 'N/A'}</td>
       <td>
@@ -62,23 +57,20 @@ function renderComplaintsTable(complaints) {
 }
 
 async function deleteComplaint(id) {
-  if (!confirm(`Are you sure you want to delete complaint ${id}?`)) return;
+  if (!confirm(`Delete complaint ${id}?`)) return;
 
   try {
     const res = await fetch(`${API_URL}/${id}`, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+        'Authorization': `Bearer ${token}`
       }
     });
 
     if (res.ok) {
-      alert('Complaint deleted successfully!');
       fetchAdminComplaints();
     } else {
-      const errorData = await res.json();
-      alert(errorData.error || 'Failed to delete complaint.');
+      alert('Failed to delete complaint.');
     }
   } catch (err) {
     console.error('Error deleting complaint:', err);
@@ -86,7 +78,7 @@ async function deleteComplaint(id) {
 }
 
 function setupLogout() {
-  const logoutBtn = document.getElementById('logoutBtn') || document.querySelector('.logout-btn');
+  const logoutBtn = document.getElementById('logoutBtn');
   if (logoutBtn) {
     logoutBtn.addEventListener('click', logoutAdmin);
   }

@@ -2,14 +2,12 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
-const path = require('path');
 require('dotenv').config();
 
 const Complaint = require('./models/Complaint');
 
 const app = express();
 
-// Middleware
 app.use(express.json({ limit: '10mb' }));
 
 app.use(cors({
@@ -18,20 +16,17 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Serve static files (HTML, CSS, JS) from project root
-app.use(express.static(path.join(__dirname)));
-
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected successfully'))
   .catch(err => console.error('MongoDB connection error:', err));
 
-// Fallback to login.html on root access
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'login.html'));
+// API Health Check
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'CyberGuard AI Backend is Running' });
 });
 
-// Admin Login Route
+// Admin Login Endpoint
 app.post('/api/admin/login', (req, res) => {
   const { username, password } = req.body;
 
@@ -50,7 +45,7 @@ app.post('/api/admin/login', (req, res) => {
   }
 });
 
-// JWT Protection Middleware
+// JWT Verification Middleware
 const verifyAdmin = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   if (!authHeader) return res.status(403).json({ error: 'Access denied. No token provided.' });
@@ -66,7 +61,7 @@ const verifyAdmin = (req, res, next) => {
   }
 };
 
-// Complaint Routes
+// Complaint Endpoints
 app.post('/api/complaints', async (req, res) => {
   try {
     const newComplaint = new Complaint(req.body);

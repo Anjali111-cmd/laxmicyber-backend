@@ -1,14 +1,14 @@
 const API_BASE_URL = '/api/admin';
 
 document.addEventListener('DOMContentLoaded', () => {
-  const loginForm = document.getElementById('loginForm') || document.querySelector('form');
+  const loginForm = document.getElementById('loginForm');
 
   if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const usernameInput = document.getElementById('username')?.value || document.querySelector('input[type="text"]')?.value;
-      const passwordInput = document.getElementById('password')?.value || document.querySelector('input[type="password"]')?.value;
+      const usernameInput = document.getElementById('username')?.value;
+      const passwordInput = document.getElementById('password')?.value;
 
       if (!usernameInput || !passwordInput) {
         alert('Please enter both username and password.');
@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } catch (err) {
         console.error('Login error:', err);
-        alert('Could not connect to backend server.');
+        alert('Could not connect to server.');
       }
     });
   }
