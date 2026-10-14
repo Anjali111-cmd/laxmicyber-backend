@@ -2,12 +2,14 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
+const path = require('path');
 require('dotenv').config();
 
 const Complaint = require('./models/Complaint');
 
 const app = express();
 
+// Middleware
 app.use(express.json({ limit: '10mb' }));
 
 app.use(cors({
@@ -61,7 +63,7 @@ const verifyAdmin = (req, res, next) => {
   }
 };
 
-// Complaint Endpoints
+// Complaint Routes
 app.post('/api/complaints', async (req, res) => {
   try {
     const newComplaint = new Complaint(req.body);
@@ -90,6 +92,12 @@ app.delete('/api/complaints/:id', verifyAdmin, async (req, res) => {
   }
 });
 
+// Root Route Fallback
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+// Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 
